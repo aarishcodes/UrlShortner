@@ -1,0 +1,42 @@
+package com.urlshortner.UrlShortner.service;
+
+import com.urlshortner.UrlShortner.entity.UrlMapping;
+import com.urlshortner.UrlShortner.respository.UrlRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+public class UrlService {
+
+    @Autowired
+    private UrlRepository urlRepository;
+
+    public UrlMapping shortUrl(String originalUrl) {
+        String shortCode = generateShortCode();
+        UrlMapping mapping = new UrlMapping();
+
+        mapping.setShortCode(shortCode);
+        mapping.setOriginalUrl(originalUrl);
+        mapping.setCreatedAt(LocalDateTime.now());
+        mapping.setExpiresAt(LocalDateTime.now().plusDays(30));
+        mapping.setClickCount(0);
+        return urlRepository.save(mapping);
+    }
+
+    public String generateShortCode() {
+        return UUID.randomUUID().toString().substring(0,6);
+    }
+
+    public Optional<UrlMapping> getOriginalUrl(String shortCode) {
+        return urlRepository.findById(shortCode);
+    }
+
+    public void incrementClickCount(UrlMapping mapping) {
+        mapping.setClickCount(mapping.getClickCount()+1);
+        urlRepository.save(mapping);
+    }
+}
