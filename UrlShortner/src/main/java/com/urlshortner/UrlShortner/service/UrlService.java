@@ -16,6 +16,10 @@ public class UrlService {
     private UrlRepository urlRepository;
 
     public UrlMapping shortUrl(String originalUrl) {
+
+        Optional<UrlMapping> existing = urlRepository.findByOriginalUrl(originalUrl);
+        if (existing.isPresent()) return existing.get();
+
         String shortCode = generateShortCode();
         UrlMapping mapping = new UrlMapping();
 
@@ -28,15 +32,30 @@ public class UrlService {
     }
 
     public String generateShortCode() {
-        return UUID.randomUUID().toString().substring(0,6);
+//        return UUID.randomUUID().toString().substring(0, 6);
+
+        String code;
+        do {
+            code = UUID.randomUUID().toString().substring(0, 6);
+        } while (urlRepository.findById(code).isPresent());
+        return code;
     }
 
     public Optional<UrlMapping> getOriginalUrl(String shortCode) {
-        return urlRepository.findById(shortCode);
+//        return urlRepository.findById(shortCode);
+
+        Optional<UrlMapping> result = urlRepository.findById(shortCode);
+        if (result.isPresent()) {
+            UrlMapping mapping = result.get();
+            if (mapping.getExpiresAt() != null && mapping.getExpiresAt().isBefore(LocalDateTime.now())) {
+                return Optional.empty(); // URL is expired
+            }
+        }
+        return result;
     }
 
     public void incrementClickCount(UrlMapping mapping) {
-        mapping.setClickCount(mapping.getClickCount()+1);
+        mapping.setClickCount(mapping.getClickCount() + 1);
         urlRepository.save(mapping);
     }
 }

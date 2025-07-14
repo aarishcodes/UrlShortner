@@ -22,7 +22,9 @@ public class UrlController {
     @PostMapping("/shorten")
     public ResponseEntity<String> shorten(@RequestBody String url) {
         UrlMapping res = urlService.shortUrl(url);
-        return ResponseEntity.ok("Shortened URL: http://localhost:8080/"+ res.getShortCode());
+//        return ResponseEntity.ok("Shortened URL: http://localhost:8080/"+ res.getShortCode());
+
+        return ResponseEntity.ok(res.getShortCode());
     }
 
     @GetMapping("/{shortCode}")
@@ -30,10 +32,10 @@ public class UrlController {
         Optional<UrlMapping> mapping = urlService.getOriginalUrl(shortCode);
         if (mapping.isPresent()) {
             urlService.incrementClickCount(mapping.get());
-//            return ResponseEntity.status(HttpStatus.FOUND)
-//                    .location(URI.create(mapping.get().getOriginalUrl()))
-//                    .build();
-           return new ResponseEntity<>(mapping.get().getClickCount(), HttpStatus.FOUND);
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(mapping.get().getOriginalUrl()))
+                    .build();
+           //return new ResponseEntity<>(mapping.get().getClickCount(), HttpStatus.FOUND);
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short URL not found");
         }
